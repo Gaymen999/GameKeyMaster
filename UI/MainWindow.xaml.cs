@@ -4,6 +4,8 @@ using Microsoft.Win32;
 using GameKeyMaster.Core;
 using GameKeyMaster.ViewModels;
 using GameKeyMaster.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace GameKeyMaster.UI
 {
