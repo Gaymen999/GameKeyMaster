@@ -29,7 +29,10 @@ namespace GameKeyMaster.Core
         public static void SendVirtualKey(ushort vkCode, bool isKeyDown)
         {
             ushort scanCode = (ushort)NativeMethods.MapVirtualKey(vkCode, 0);
-            SendKey(scanCode, isKeyDown);
+            if (scanCode != 0)
+            {
+                SendKey(scanCode, isKeyDown);
+            }
         }
     }
 }

@@ -19,7 +19,7 @@ namespace GameKeyMaster.Core
                 }
                 else
                 {
-                    ushort vkCode = ParseKeyToVirtualKeyCode(action.Key);
+                    ushort vkCode = KeyHelper.GetVirtualKeyCode(action.Key);
                     if (vkCode == 0) continue;
 
                     if (action.ActionType == "keyDown")
@@ -38,24 +38,6 @@ namespace GameKeyMaster.Core
                     }
                 }
             }
-        }
-
-        private ushort ParseKeyToVirtualKeyCode(string key)
-        {
-            // Simple mapping for demonstration. In a real app, KeyInterop is better.
-            if (Enum.TryParse<ConsoleKey>(key, true, out var consoleKey))
-            {
-                return (ushort)consoleKey;
-            }
-            
-            // Handle special cases
-            return key.ToUpperInvariant() switch
-            {
-                "SHIFT" => 0x10,
-                "CTRL" => 0x11,
-                "ALT" => 0x12,
-                _ => 0
-            };
         }
     }
 }

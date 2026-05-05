@@ -13,6 +13,7 @@ namespace GameKeyMaster.UI
         private KeyboardHookEngine _hookEngine;
         private ProcessMonitor _processMonitor;
         private MacroExecutor _macroExecutor;
+        private OverlayWindow? _currentOverlay;
 
         public MainWindow()
         {
@@ -119,11 +120,20 @@ namespace GameKeyMaster.UI
                 if (isActive)
                 {
                     _viewModel.StatusText = "OYUN AKTİF: Tuşlar eşleniyor.";
-                    new OverlayWindow(_viewModel.SelectedGame.Name).Show();
+                    if (_currentOverlay == null)
+                    {
+                        _currentOverlay = new OverlayWindow(_viewModel.SelectedGame.Name);
+                        _currentOverlay.Closed += (s, e) => _currentOverlay = null;
+                        _currentOverlay.Show();
+                    }
                 }
                 else
                 {
                     _viewModel.StatusText = "Oyun arka planda. Sistem beklemede.";
+                    if (_currentOverlay != null)
+                    {
+                        _currentOverlay.Close();
+                    }
                 }
             });
         }
@@ -169,8 +179,11 @@ namespace GameKeyMaster.UI
         {
             if (sender is FrameworkElement fe && fe.DataContext is KeyMapping mapping)
             {
-                _viewModel.SelectedGame?.Mappings.Remove(mapping);
-                _viewModel.Save();
+                if (MessageBox.Show("Bu eşlemeyi silmek istediğinize emin misiniz?", "Onay", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    _viewModel.SelectedGame?.Mappings.Remove(mapping);
+                    _viewModel.Save();
+                }
             }
         }
 
@@ -178,8 +191,11 @@ namespace GameKeyMaster.UI
         {
             if (sender is FrameworkElement fe && fe.DataContext is MacroProfile macro)
             {
-                _viewModel.SelectedGame?.Macros.Remove(macro);
-                _viewModel.Save();
+                if (MessageBox.Show("Bu makroyu silmek istediğinize emin misiniz?", "Onay", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                {
+                    _viewModel.SelectedGame?.Macros.Remove(macro);
+                    _viewModel.Save();
+                }
             }
         }
 
