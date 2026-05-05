@@ -1,0 +1,40 @@
+# C# / .NET
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio
+.vs/
+*.sqlite
+.vscode/
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+build/
+bld/
+[Bb]inaries/
+*.VC.db
+
+# NuGet Packages
+*.nupkg
+packages/
+
+# Profiling
+*.psess
+*.vsp
+*.vspx
+*.sap
+
+# OS specific
+.DS_Store
+Thumbs.db
