@@ -48,14 +48,21 @@ namespace GameKeyMaster.Core
         {
             if (nCode >= 0 && IsActive)
             {
-                int vkCode = Marshal.ReadInt32(lParam);
-                var args = new HookEventArgs { KeyCode = vkCode, Suppress = false };
+                var kbdStruct = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
+                
+                // Sonsuz döngü koruması: Bizim gönderdiğimiz tuşları yoksay
+                if (kbdStruct.dwExtraInfo == (IntPtr)0x1337)
+                {
+                    return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
+                }
+
+                var args = new HookEventArgs { KeyCode = (int)kbdStruct.vkCode, Suppress = false };
                 
                 KeyIntercepted?.Invoke(this, args);
 
                 if (args.Suppress)
                 {
-                    return (IntPtr)1; // Suppress the key
+                    return (IntPtr)1; // Suppress the key (Yutma işlemi)
                 }
             }
 

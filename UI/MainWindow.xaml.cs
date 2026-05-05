@@ -12,6 +12,7 @@ namespace GameKeyMaster.UI
         private MainViewModel _viewModel;
         private KeyboardHookEngine _hookEngine;
         private ProcessMonitor _processMonitor;
+        private MacroExecutor _macroExecutor;
 
         public MainWindow()
         {
@@ -21,6 +22,7 @@ namespace GameKeyMaster.UI
 
             _hookEngine = new KeyboardHookEngine();
             _processMonitor = new ProcessMonitor();
+            _macroExecutor = new MacroExecutor();
 
             _processMonitor.GameActiveStateChanged += ProcessMonitor_GameActiveStateChanged;
             _hookEngine.KeyIntercepted += HookEngine_KeyIntercepted;
@@ -72,6 +74,33 @@ namespace GameKeyMaster.UI
             }
         }
 
+        private void AddMacro_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.SelectedGame == null)
+            {
+                MessageBox.Show("Lütfen önce bir oyun seçin.");
+                return;
+            }
+
+            var inputCapture = new KeyCaptureWindow();
+            inputCapture.Owner = this;
+            inputCapture.Title = "Makro Tetikleyici Tuş";
+            if (inputCapture.ShowDialog() == true)
+            {
+                string inputKey = inputCapture.ResultKey;
+                var macro = new MacroProfile { InputKey = inputKey, SuppressOriginal = true };
+                
+                // Örnek makro adımları
+                macro.Actions.Add(new MacroAction { ActionType = "keyDown", Key = "Shift" });
+                macro.Actions.Add(new MacroAction { ActionType = "keyPress", Key = "W" });
+                macro.Actions.Add(new MacroAction { ActionType = "delay", DelayMs = 100 });
+                macro.Actions.Add(new MacroAction { ActionType = "keyUp", Key = "Shift" });
+
+                _viewModel.SelectedGame.Macros.Add(macro);
+                _viewModel.Save();
+            }
+        }
+
         private void StartSystem_Click(object sender, RoutedEventArgs e)
         {
             if (_viewModel.SelectedGame == null)
@@ -110,21 +139,37 @@ namespace GameKeyMaster.UI
             });
         }
 
-        private void HookEngine_KeyIntercepted(object? sender, HookEventArgs e)
+        private async void HookEngine_KeyIntercepted(object? sender, HookEventArgs e)
         {
-            // Bu kısım dinamik mapping listesinden kontrol edilir
             if (_viewModel.SelectedGame == null) return;
 
+            // 1. Normal Eşleşmeler
             foreach (var mapping in _viewModel.SelectedGame.Mappings)
             {
-                // KeyCode -> String dönüşümü yapılmalı (örnek: 86 = V)
-                if (e.KeyCode.ToString() == mapping.InputKey || (mapping.InputKey == "V" && e.KeyCode == 86))
+                ushort inputVk = KeyHelper.GetVirtualKeyCode(mapping.InputKey);
+                if (inputVk != 0 && e.KeyCode == inputVk)
                 {
                     e.Suppress = mapping.SuppressOriginal;
-                    
-                    // OutputKey gönder (örnek: F)
-                    InputSender.SendVirtualKey(70, true);
-                    InputSender.SendVirtualKey(70, false);
+                    ushort outputVk = KeyHelper.GetVirtualKeyCode(mapping.OutputKey);
+                    if (outputVk != 0)
+                    {
+                        InputSender.SendVirtualKey(outputVk, true);
+                        InputSender.SendVirtualKey(outputVk, false);
+                    }
+                    return;
+                }
+            }
+
+            // 2. Makrolar
+            foreach (var macro in _viewModel.SelectedGame.Macros)
+            {
+                ushort inputVk = KeyHelper.GetVirtualKeyCode(macro.InputKey);
+                if (inputVk != 0 && e.KeyCode == inputVk)
+                {
+                    e.Suppress = macro.SuppressOriginal;
+                    // Fire and forget makro
+                    _ = _macroExecutor.ExecuteMacroAsync(macro);
+                    return;
                 }
             }
         }

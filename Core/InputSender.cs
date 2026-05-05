@@ -18,7 +18,7 @@ namespace GameKeyMaster.Core
                         wScan = scanCode,
                         dwFlags = NativeMethods.KEYEVENTF_SCANCODE | (isKeyDown ? 0 : NativeMethods.KEYEVENTF_KEYUP),
                         time = 0,
-                        dwExtraInfo = IntPtr.Zero
+                        dwExtraInfo = (IntPtr)0x1337 // Sonsuz döngü koruma bayrağı
                     }
                 }
             };
