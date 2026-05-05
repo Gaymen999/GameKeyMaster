@@ -82,21 +82,10 @@ namespace GameKeyMaster.UI
                 return;
             }
 
-            var inputCapture = new KeyCaptureWindow();
-            inputCapture.Owner = this;
-            inputCapture.Title = "Makro Tetikleyici Tuş";
-            if (inputCapture.ShowDialog() == true)
+            var builder = new MacroBuilderWindow { Owner = this };
+            if (builder.ShowDialog() == true)
             {
-                string inputKey = inputCapture.ResultKey;
-                var macro = new MacroProfile { InputKey = inputKey, SuppressOriginal = true };
-                
-                // Örnek makro adımları
-                macro.Actions.Add(new MacroAction { ActionType = "keyDown", Key = "Shift" });
-                macro.Actions.Add(new MacroAction { ActionType = "keyPress", Key = "W" });
-                macro.Actions.Add(new MacroAction { ActionType = "delay", DelayMs = 100 });
-                macro.Actions.Add(new MacroAction { ActionType = "keyUp", Key = "Shift" });
-
-                _viewModel.SelectedGame.Macros.Add(macro);
+                _viewModel.SelectedGame.Macros.Add(builder.ResultMacro);
                 _viewModel.Save();
             }
         }
@@ -153,8 +142,7 @@ namespace GameKeyMaster.UI
                     ushort outputVk = KeyHelper.GetVirtualKeyCode(mapping.OutputKey);
                     if (outputVk != 0)
                     {
-                        InputSender.SendVirtualKey(outputVk, true);
-                        InputSender.SendVirtualKey(outputVk, false);
+                        InputSender.SendVirtualKey(outputVk, e.IsKeyDown); // Hold Desteği
                     }
                     return;
                 }
@@ -167,10 +155,31 @@ namespace GameKeyMaster.UI
                 if (inputVk != 0 && e.KeyCode == inputVk)
                 {
                     e.Suppress = macro.SuppressOriginal;
-                    // Fire and forget makro
-                    _ = _macroExecutor.ExecuteMacroAsync(macro);
+                    // Makrolar genellikle sadece tuşa basıldığında (KeyDown) tetiklenir
+                    if (e.IsKeyDown)
+                    {
+                        _ = _macroExecutor.ExecuteMacroAsync(macro);
+                    }
                     return;
                 }
+            }
+        }
+
+        private void DeleteMapping_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.DataContext is KeyMapping mapping)
+            {
+                _viewModel.SelectedGame?.Mappings.Remove(mapping);
+                _viewModel.Save();
+            }
+        }
+
+        private void DeleteMacro_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.DataContext is MacroProfile macro)
+            {
+                _viewModel.SelectedGame?.Macros.Remove(macro);
+                _viewModel.Save();
             }
         }
 

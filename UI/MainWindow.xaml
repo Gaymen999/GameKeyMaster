@@ -69,6 +69,13 @@
                                     <GridViewColumn Header="Fiziksel Tuş" DisplayMemberBinding="{Binding InputKey}" Width="120"/>
                                     <GridViewColumn Header="Oyun Tuşu" DisplayMemberBinding="{Binding OutputKey}" Width="120"/>
                                     <GridViewColumn Header="Yutma" DisplayMemberBinding="{Binding SuppressOriginal}" Width="80"/>
+                                    <GridViewColumn Header="" Width="50">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Sil" Background="#CC0000" Foreground="White" BorderThickness="0" Click="DeleteMapping_Click" Padding="5,2"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
                                 </GridView>
                             </ListView.View>
                         </ListView>
@@ -91,6 +98,13 @@
                                     <GridViewColumn Header="Tetikleyici Tuş" DisplayMemberBinding="{Binding InputKey}" Width="120"/>
                                     <GridViewColumn Header="Yutma" DisplayMemberBinding="{Binding SuppressOriginal}" Width="60"/>
                                     <GridViewColumn Header="Adım Sayısı" DisplayMemberBinding="{Binding Actions.Count}" Width="80"/>
+                                    <GridViewColumn Header="" Width="50">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <Button Content="Sil" Background="#CC0000" Foreground="White" BorderThickness="0" Click="DeleteMacro_Click" Padding="5,2"/>
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
                                 </GridView>
                             </ListView.View>
                         </ListView>

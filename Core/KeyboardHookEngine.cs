@@ -48,6 +48,15 @@ namespace GameKeyMaster.Core
         {
             if (nCode >= 0 && IsActive)
             {
+                int msg = wParam.ToInt32();
+                bool isKeyDown = (msg == NativeMethods.WM_KEYDOWN || msg == NativeMethods.WM_SYSKEYDOWN);
+                bool isKeyUp = (msg == NativeMethods.WM_KEYUP || msg == NativeMethods.WM_SYSKEYUP);
+
+                if (!isKeyDown && !isKeyUp) 
+                {
+                    return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
+                }
+
                 var kbdStruct = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
                 
                 // Sonsuz döngü koruması: Bizim gönderdiğimiz tuşları yoksay
@@ -56,7 +65,7 @@ namespace GameKeyMaster.Core
                     return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
                 }
 
-                var args = new HookEventArgs { KeyCode = (int)kbdStruct.vkCode, Suppress = false };
+                var args = new HookEventArgs { KeyCode = (int)kbdStruct.vkCode, Suppress = false, IsKeyDown = isKeyDown };
                 
                 KeyIntercepted?.Invoke(this, args);
 
@@ -79,5 +88,6 @@ namespace GameKeyMaster.Core
     {
         public int KeyCode { get; set; }
         public bool Suppress { get; set; }
+        public bool IsKeyDown { get; set; }
     }
 }

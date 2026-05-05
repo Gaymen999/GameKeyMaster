@@ -1,0 +1,62 @@
+<Window x:Class="GameKeyMaster.UI.MacroBuilderWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Makro Oluşturucu" Height="450" Width="400"
+        Background="#121212" Foreground="White" WindowStartupLocation="CenterOwner">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Text="Yeni Makro Dizisi Oluştur" FontSize="18" FontWeight="Bold" Foreground="#007ACC" Margin="0,0,0,15"/>
+
+        <StackPanel Grid.Row="1" Margin="0,0,0,15">
+            <TextBlock Text="Tetikleyici Tuş:" Margin="0,0,0,5"/>
+            <StackPanel Orientation="Horizontal">
+                <TextBox x:Name="TriggerKeyTextBox" Width="100" IsReadOnly="True" Text="Belirlenmedi" VerticalContentAlignment="Center"/>
+                <Button Content="Tuş Seç" Margin="10,0,0,0" Padding="10,5" Click="SelectTriggerKey_Click"/>
+                <CheckBox x:Name="SuppressCheckBox" Content="Orijinal Tuşu Yut" IsChecked="True" VerticalAlignment="Center" Margin="15,0,0,0" Foreground="White"/>
+            </StackPanel>
+        </StackPanel>
+
+        <GroupBox Grid.Row="2" Header="Makro Adımları" Foreground="White" BorderBrush="#333">
+            <Grid Margin="5">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <ListView x:Name="ActionsListView" Background="#1E1E1E" BorderThickness="0" Margin="0,0,0,10">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="İşlem" DisplayMemberBinding="{Binding ActionType}" Width="80"/>
+                            <GridViewColumn Header="Tuş/Süre" DisplayMemberBinding="{Binding KeyOrDelay}" Width="150"/>
+                            <GridViewColumn Header="" Width="60">
+                                <GridViewColumn.CellTemplate>
+                                    <DataTemplate>
+                                        <Button Content="Kaldır" Background="#CC0000" Foreground="White" BorderThickness="0" Padding="5,2" Click="RemoveAction_Click"/>
+                                    </DataTemplate>
+                                </GridViewColumn.CellTemplate>
+                            </GridViewColumn>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="+ KeyDown" Margin="0,0,5,0" Padding="8,5" Click="AddKeyDown_Click"/>
+                    <Button Content="+ KeyUp" Margin="0,0,5,0" Padding="8,5" Click="AddKeyUp_Click"/>
+                    <Button Content="+ KeyPress" Margin="0,0,5,0" Padding="8,5" Click="AddKeyPress_Click"/>
+                    <Button Content="+ Delay" Padding="8,5" Click="AddDelay_Click"/>
+                </StackPanel>
+            </Grid>
+        </GroupBox>
+
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,15,0,0">
+            <Button Content="İptal" Padding="15,8" Margin="0,0,10,0" Background="#444" Foreground="White" BorderThickness="0" Click="Cancel_Click"/>
+            <Button Content="Makroyu Kaydet" Padding="15,8" Background="#2ECC71" Foreground="White" BorderThickness="0" FontWeight="Bold" Click="Save_Click"/>
+        </StackPanel>
+    </Grid>
+</Window>
