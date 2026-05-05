@@ -49,7 +49,11 @@
                     <Button Content="+ KeyDown" Margin="0,0,5,0" Padding="8,5" Click="AddKeyDown_Click"/>
                     <Button Content="+ KeyUp" Margin="0,0,5,0" Padding="8,5" Click="AddKeyUp_Click"/>
                     <Button Content="+ KeyPress" Margin="0,0,5,0" Padding="8,5" Click="AddKeyPress_Click"/>
-                    <Button Content="+ Delay" Padding="8,5" Click="AddDelay_Click"/>
+                    <StackPanel Orientation="Horizontal" Margin="10,0,0,0">
+                        <TextBox x:Name="DelayInput" Width="40" Text="50" VerticalContentAlignment="Center" Margin="0,0,5,0" TextAlignment="Center"/>
+                        <TextBlock Text="ms" Foreground="Gray" VerticalAlignment="Center" Margin="0,0,5,0"/>
+                        <Button Content="+ Delay" Padding="8,5" Click="AddDelay_Click"/>
+                    </StackPanel>
                 </StackPanel>
             </Grid>
         </GroupBox>

@@ -54,33 +54,13 @@ namespace GameKeyMaster.UI
 
         private void AddDelay_Click(object sender, RoutedEventArgs e)
         {
-            Window dialog = new Window
+            if (int.TryParse(DelayInput.Text, out int ms) && ms > 0)
             {
-                Title = "Gecikme Süresi (ms)",
-                Width = 250,
-                Height = 150,
-                WindowStartupLocation = WindowStartupLocation.CenterOwner,
-                Owner = this,
-                ResizeMode = ResizeMode.NoResize,
-                Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(30, 30, 30))
-            };
-
-            var stack = new System.Windows.Controls.StackPanel { Margin = new Thickness(15) };
-            var tb = new System.Windows.Controls.TextBox { Text = "50", Margin = new Thickness(0, 10, 0, 10), Padding = new Thickness(5) };
-            var btn = new System.Windows.Controls.Button { Content = "Ekle", Padding = new Thickness(5), Background = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(46, 204, 113)), Foreground = System.Windows.Media.Brushes.White, BorderThickness = new Thickness(0) };
-            btn.Click += (s, args) => { dialog.DialogResult = true; };
-            
-            stack.Children.Add(new System.Windows.Controls.TextBlock { Text = "Milisaniye girin:", Foreground = System.Windows.Media.Brushes.White });
-            stack.Children.Add(tb);
-            stack.Children.Add(btn);
-            dialog.Content = stack;
-
-            if (dialog.ShowDialog() == true)
+                _actions.Add(new MacroActionDisplay { ActionType = "delay", DelayMs = ms });
+            }
+            else
             {
-                if (int.TryParse(tb.Text, out int ms) && ms > 0)
-                {
-                    _actions.Add(new MacroActionDisplay { ActionType = "delay", DelayMs = ms });
-                }
+                MessageBox.Show("Lütfen geçerli bir pozitif milisaniye (örnek: 50) değeri girin.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
 

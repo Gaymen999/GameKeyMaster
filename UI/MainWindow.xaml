@@ -35,8 +35,12 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
 
-                <Button Grid.Row="2" Content="+ Yeni Oyun Ekle" Background="#007ACC" Foreground="White" 
-                        Padding="10" BorderThickness="0" Cursor="Hand" Click="AddGame_Click"/>
+                <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Content="+ Yeni Oyun Ekle" Background="#007ACC" Foreground="White" 
+                            Padding="10" BorderThickness="0" Cursor="Hand" Click="AddGame_Click" Margin="0,0,10,0"/>
+                    <Button Content="Oyunu Sil" Background="#CC0000" Foreground="White" 
+                            Padding="10" BorderThickness="0" Cursor="Hand" Click="DeleteGame_Click"/>
+                </StackPanel>
             </Grid>
         </Border>
 

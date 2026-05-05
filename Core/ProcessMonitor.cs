@@ -27,6 +27,9 @@ namespace GameKeyMaster.Core
             _timer?.Change(Timeout.Infinite, 0);
         }
 
+        private uint _lastProcessId = 0;
+        private string _lastProcessName = string.Empty;
+
         private void CheckForegroundWindow(object? state)
         {
             if (string.IsNullOrEmpty(_targetExecutable)) return;
@@ -37,18 +40,36 @@ namespace GameKeyMaster.Core
             NativeMethods.GetWindowThreadProcessId(hWnd, out uint processId);
             
             bool isActiveNow = false;
-            try
+
+            if (processId != _lastProcessId)
             {
-                using var process = Process.GetProcessById((int)processId);
-                string processName = process.ProcessName + ".exe";
-                if (processName.Equals(_targetExecutable, StringComparison.OrdinalIgnoreCase))
+                _lastProcessId = processId;
+                try
                 {
-                    isActiveNow = true;
+                    using var process = Process.GetProcessById((int)processId);
+                    _lastProcessName = process.ProcessName + ".exe";
+                }
+                catch (System.ComponentModel.Win32Exception)
+                {
+                    _lastProcessName = string.Empty; // Access denied
+                }
+                catch (ArgumentException)
+                {
+                    _lastProcessName = string.Empty; // Process is not running
+                }
+                catch (InvalidOperationException)
+                {
+                    _lastProcessName = string.Empty;
+                }
+                catch (Exception)
+                {
+                    _lastProcessName = string.Empty;
                 }
             }
-            catch
+
+            if (_lastProcessName.Equals(_targetExecutable, StringComparison.OrdinalIgnoreCase))
             {
-                // Process might have exited or access denied
+                isActiveNow = true;
             }
 
             if (isActiveNow != _isGameActive)

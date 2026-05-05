@@ -14,6 +14,7 @@ namespace GameKeyMaster.UI
         private ProcessMonitor _processMonitor;
         private MacroExecutor _macroExecutor;
         private OverlayWindow? _currentOverlay;
+        private HashSet<MacroProfile> _runningMacros = new HashSet<MacroProfile>();
 
         public MainWindow()
         {
@@ -91,6 +92,22 @@ namespace GameKeyMaster.UI
             }
         }
 
+        private void DeleteGame_Click(object sender, RoutedEventArgs e)
+        {
+            if (_viewModel.SelectedGame != null)
+            {
+                if (MessageBox.Show($"'{_viewModel.SelectedGame.Name}' oyun profilini silmek istediğinize emin misiniz?", "Oyun Sil", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.Yes)
+                {
+                    _viewModel.Games.Remove(_viewModel.SelectedGame);
+                    _viewModel.Save();
+                }
+            }
+            else
+            {
+                MessageBox.Show("Lütfen silmek için listeden bir oyun seçin.");
+            }
+        }
+
         private void StartSystem_Click(object sender, RoutedEventArgs e)
         {
             if (_viewModel.SelectedGame == null)
@@ -165,13 +182,28 @@ namespace GameKeyMaster.UI
                 if (inputVk != 0 && e.KeyCode == inputVk)
                 {
                     e.Suppress = macro.SuppressOriginal;
-                    // Makrolar genellikle sadece tuşa basıldığında (KeyDown) tetiklenir
                     if (e.IsKeyDown)
                     {
-                        _ = _macroExecutor.ExecuteMacroAsync(macro);
+                        if (!_runningMacros.Contains(macro))
+                        {
+                            _runningMacros.Add(macro);
+                            _ = ExecuteMacroWithTrackingAsync(macro);
+                        }
                     }
                     return;
                 }
+            }
+        }
+
+        private async Task ExecuteMacroWithTrackingAsync(MacroProfile macro)
+        {
+            try
+            {
+                await _macroExecutor.ExecuteMacroAsync(macro);
+            }
+            finally
+            {
+                _runningMacros.Remove(macro);
             }
         }
 
