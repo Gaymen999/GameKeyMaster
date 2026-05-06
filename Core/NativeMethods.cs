@@ -121,7 +121,7 @@ namespace GameKeyMaster.Core
         [DllImport("user32.dll", EntryPoint = "GetWindowLong", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetWindowLongPtr32(IntPtr hWnd, int nIndex);
 
-        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("user32.dll", EntryPoint = "GetWindowLongPtr", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetWindowLongPtr64(IntPtr hWnd, int nIndex);
 
         public static IntPtr GetWindowLongPtr(IntPtr hWnd, int nIndex)
@@ -135,7 +135,7 @@ namespace GameKeyMaster.Core
         [DllImport("user32.dll", EntryPoint = "SetWindowLong", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr SetWindowLongPtr32(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
-        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", CharSet = CharSet.Auto, SetLastError = true)]
+        [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, IntPtr dwNewLong);
 
         public static IntPtr SetWindowLongPtr(IntPtr hWnd, int nIndex, IntPtr dwNewLong)

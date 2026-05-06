@@ -30,7 +30,7 @@ namespace GameKeyMaster
             }
         }
 
-        private void LogAndCleanup(Exception ex)
+        internal void LogAndCleanup(Exception ex)
         {
             try
             {
@@ -45,7 +45,7 @@ namespace GameKeyMaster
             LogToFile(ex);
         }
 
-        private void LogToFile(Exception ex)
+        internal void LogToFile(Exception ex)
         {
             try
             {

@@ -21,16 +21,24 @@ namespace GameKeyMaster.UI
 
         public MainWindow()
         {
-            InitializeComponent();
-            _viewModel = new MainViewModel();
-            this.DataContext = _viewModel;
+            try
+            {
+                InitializeComponent();
+                _viewModel = new MainViewModel();
+                this.DataContext = _viewModel;
 
-            _hookEngine = new KeyboardHookEngine();
-            _processMonitor = new ProcessMonitor();
-            _macroExecutor = new MacroExecutor();
+                _hookEngine = new KeyboardHookEngine();
+                _processMonitor = new ProcessMonitor();
+                _macroExecutor = new MacroExecutor();
 
-            _processMonitor.GameActiveStateChanged += ProcessMonitor_GameActiveStateChanged;
-            _hookEngine.KeyIntercepted += HookEngine_KeyIntercepted;
+                _processMonitor.GameActiveStateChanged += ProcessMonitor_GameActiveStateChanged;
+                _hookEngine.KeyIntercepted += HookEngine_KeyIntercepted;
+            }
+            catch (Exception ex)
+            {
+                System.IO.File.WriteAllText("startup_crash.txt", ex.ToString());
+                throw;
+            }
         }
 
         public void CleanupHooks()
@@ -174,46 +182,56 @@ namespace GameKeyMaster.UI
 
         private async void HookEngine_KeyIntercepted(object? sender, HookEventArgs e)
         {
-            var game = _viewModel.SelectedGame;
-            if (game == null) return;
-
-            // 1. Normal Eşleşmeler - Snapshot kullanarak thread-safety sağla
-            var mappings = game.Mappings.ToArray();
-            foreach (var mapping in mappings)
+            try
             {
-                ushort inputVk = KeyHelper.GetVirtualKeyCode(mapping.InputKey);
-                if (inputVk != 0 && e.KeyCode == inputVk)
-                {
-                    e.Suppress = mapping.SuppressOriginal;
-                    ushort outputVk = KeyHelper.GetVirtualKeyCode(mapping.OutputKey);
-                    if (outputVk != 0)
-                    {
-                        InputSender.SendVirtualKey(outputVk, e.IsKeyDown); // Hold Desteği
-                    }
-                    return;
-                }
-            }
+                var game = _viewModel.SelectedGame;
+                if (game == null) return;
 
-            // 2. Makrolar - Snapshot kullanarak thread-safety sağla
-            var macros = game.Macros.ToArray();
-            foreach (var macro in macros)
-            {
-                ushort inputVk = KeyHelper.GetVirtualKeyCode(macro.InputKey);
-                if (inputVk != 0 && e.KeyCode == inputVk)
+                // 1. Normal Eşleşmeler - Snapshot kullanarak thread-safety sağla
+                var mappings = game.Mappings.ToArray();
+                foreach (var mapping in mappings)
                 {
-                    e.Suppress = macro.SuppressOriginal;
-                    if (e.IsKeyDown)
+                    ushort inputVk = KeyHelper.GetVirtualKeyCode(mapping.InputKey);
+                    if (inputVk != 0 && e.KeyCode == inputVk)
                     {
-                        lock (_runningMacros)
+                        e.Suppress = mapping.SuppressOriginal;
+                        ushort outputVk = KeyHelper.GetVirtualKeyCode(mapping.OutputKey);
+                        if (outputVk != 0)
                         {
-                            if (!_runningMacros.Contains(macro))
+                            InputSender.SendVirtualKey(outputVk, e.IsKeyDown); // Hold Desteği
+                        }
+                        return;
+                    }
+                }
+
+                // 2. Makrolar - Snapshot kullanarak thread-safety sağla
+                var macros = game.Macros.ToArray();
+                foreach (var macro in macros)
+                {
+                    ushort inputVk = KeyHelper.GetVirtualKeyCode(macro.InputKey);
+                    if (inputVk != 0 && e.KeyCode == inputVk)
+                    {
+                        e.Suppress = macro.SuppressOriginal;
+                        if (e.IsKeyDown)
+                        {
+                            lock (_runningMacros)
                             {
-                                _runningMacros.Add(macro);
-                                _ = ExecuteMacroWithTrackingAsync(macro);
+                                if (!_runningMacros.Contains(macro))
+                                {
+                                    _runningMacros.Add(macro);
+                                    _ = ExecuteMacroWithTrackingAsync(macro);
+                                }
                             }
                         }
+                        return;
                     }
-                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                if (Application.Current is App app)
+                {
+                    app.LogAndCleanup(ex);
                 }
             }
         }
