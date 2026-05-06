@@ -24,8 +24,8 @@ namespace GameKeyMaster.UI
         {
             // Make the window click-through
             IntPtr hwnd = new WindowInteropHelper(this).Handle;
-            int extendedStyle = NativeMethods.GetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE);
-            NativeMethods.SetWindowLong(hwnd, NativeMethods.GWL_EXSTYLE, extendedStyle | NativeMethods.WS_EX_TRANSPARENT);
+            IntPtr extendedStyle = NativeMethods.GetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE);
+            NativeMethods.SetWindowLongPtr(hwnd, NativeMethods.GWL_EXSTYLE, new IntPtr(extendedStyle.ToInt64() | NativeMethods.WS_EX_TRANSPARENT));
 
             // Start timer to close overlay after 5 seconds
             _timer.Start();
