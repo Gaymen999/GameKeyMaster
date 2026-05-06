@@ -14,7 +14,7 @@ namespace GameKeyMaster
 
         private void App_DispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
         {
-            LogToFile(e.Exception);
+            LogAndCleanup(e.Exception);
             MessageBox.Show($"Beklenmeyen bir arayüz hatası oluştu:\n{e.Exception.Message}\n\nStack Trace:\n{e.Exception.StackTrace}", 
                             "Kritik Hata (UI)", MessageBoxButton.OK, MessageBoxImage.Error);
             e.Handled = true;
@@ -24,10 +24,25 @@ namespace GameKeyMaster
         {
             if (e.ExceptionObject is Exception ex)
             {
-                LogToFile(ex);
+                LogAndCleanup(ex);
                 MessageBox.Show($"Beklenmeyen bir arka plan hatası oluştu:\n{ex.Message}\n\nStack Trace:\n{ex.StackTrace}", 
                                 "Kritik Hata (Arka Plan)", MessageBoxButton.OK, MessageBoxImage.Error);
             }
+        }
+
+        private void LogAndCleanup(Exception ex)
+        {
+            try
+            {
+                // Global Hook'un havada kalmasını önle
+                if (App.Current.MainWindow is GameKeyMaster.UI.MainWindow mw)
+                {
+                    mw.CleanupHooks();
+                }
+            }
+            catch { }
+
+            LogToFile(ex);
         }
 
         private void LogToFile(Exception ex)

@@ -42,33 +42,36 @@ namespace GameKeyMaster.Core
 
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
         {
-            if (nCode >= 0 && IsActive)
+            if (nCode < 0 || !IsActive)
             {
-                int msg = wParam.ToInt32();
-                bool isKeyDown = (msg == NativeMethods.WM_KEYDOWN || msg == NativeMethods.WM_SYSKEYDOWN);
-                bool isKeyUp = (msg == NativeMethods.WM_KEYUP || msg == NativeMethods.WM_SYSKEYUP);
+                return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
+            }
 
-                if (!isKeyDown && !isKeyUp) 
-                {
-                    return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
-                }
+            int msg = wParam.ToInt32();
+            bool isKeyDown = (msg == NativeMethods.WM_KEYDOWN || msg == NativeMethods.WM_SYSKEYDOWN);
+            bool isKeyUp = (msg == NativeMethods.WM_KEYUP || msg == NativeMethods.WM_SYSKEYUP);
 
-                var kbdStruct = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
-                
-                // Sonsuz döngü koruması: Bizim gönderdiğimiz tuşları yoksay
-                if (kbdStruct.dwExtraInfo == (IntPtr)0x1337)
-                {
-                    return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
-                }
+            if (!isKeyDown && !isKeyUp) 
+            {
+                return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
+            }
 
-                var args = new HookEventArgs { KeyCode = (int)kbdStruct.vkCode, Suppress = false, IsKeyDown = isKeyDown };
-                
-                KeyIntercepted?.Invoke(this, args);
+            var kbdStruct = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
+            
+            // Sonsuz döngü koruması: Bizim gönderdiğimiz tuşları yoksay
+            if (kbdStruct.dwExtraInfo == (IntPtr)0x1337)
+            {
+                return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
+            }
 
-                if (args.Suppress)
-                {
-                    return (IntPtr)1; // Suppress the key (Yutma işlemi)
-                }
+            var args = new HookEventArgs { KeyCode = (int)kbdStruct.vkCode, Suppress = false, IsKeyDown = isKeyDown };
+            
+            // Invoke synchronously to check for suppression, subscribers MUST NOT block this call.
+            KeyIntercepted?.Invoke(this, args);
+
+            if (args.Suppress)
+            {
+                return (IntPtr)1; // Suppress the key (Yutma işlemi)
             }
 
             return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);

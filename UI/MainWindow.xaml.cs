@@ -33,6 +33,12 @@ namespace GameKeyMaster.UI
             _hookEngine.KeyIntercepted += HookEngine_KeyIntercepted;
         }
 
+        public void CleanupHooks()
+        {
+            _hookEngine?.Stop();
+            _processMonitor?.StopMonitoring();
+        }
+
         private void AddGame_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new OpenFileDialog();

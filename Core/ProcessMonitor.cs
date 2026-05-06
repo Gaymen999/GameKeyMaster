@@ -1,87 +1,110 @@
 using System;
 using System.Diagnostics;
-using System.Threading;
+using System.Runtime.InteropServices;
 
 namespace GameKeyMaster.Core
 {
     public class ProcessMonitor : IDisposable
     {
-        private Timer? _timer;
         private string _targetExecutable = string.Empty;
         private bool _isGameActive = false;
+        private IntPtr _hWinEventHook = IntPtr.Zero;
+        private NativeMethods.WinEventDelegate? _winEventProc;
 
         public event EventHandler<bool>? GameActiveStateChanged;
 
         public void SetTargetGame(string executableName)
         {
             _targetExecutable = executableName?.ToLowerInvariant() ?? string.Empty;
+            // Check immediately when target is set
+            CheckForegroundWindow();
         }
 
         public void StartMonitoring(int intervalMs = 1000)
         {
-            _timer = new Timer(CheckForegroundWindow, null, 0, intervalMs);
+            if (_hWinEventHook == IntPtr.Zero)
+            {
+                _winEventProc = new NativeMethods.WinEventDelegate(WinEventCallback);
+                _hWinEventHook = NativeMethods.SetWinEventHook(
+                    NativeMethods.EVENT_SYSTEM_FOREGROUND,
+                    NativeMethods.EVENT_SYSTEM_FOREGROUND,
+                    IntPtr.Zero,
+                    _winEventProc,
+                    0,
+                    0,
+                    NativeMethods.WINEVENT_OUTOFCONTEXT);
+                    
+                CheckForegroundWindow();
+            }
         }
 
         public void StopMonitoring()
         {
-            _timer?.Change(Timeout.Infinite, 0);
+            if (_hWinEventHook != IntPtr.Zero)
+            {
+                NativeMethods.UnhookWinEvent(_hWinEventHook);
+                _hWinEventHook = IntPtr.Zero;
+                _winEventProc = null;
+            }
         }
 
-        private uint _lastProcessId = 0;
-        private string _lastProcessName = string.Empty;
+        private void WinEventCallback(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild, uint dwEventThread, uint dwmsEventTime)
+        {
+            if (eventType == NativeMethods.EVENT_SYSTEM_FOREGROUND)
+            {
+                CheckForegroundWindow(hwnd);
+            }
+        }
 
-        private void CheckForegroundWindow(object? state)
+        private void CheckForegroundWindow(IntPtr? hwnd = null)
         {
             if (string.IsNullOrEmpty(_targetExecutable)) return;
 
-            IntPtr hWnd = NativeMethods.GetForegroundWindow();
-            if (hWnd == IntPtr.Zero) return;
+            IntPtr hWndToCheck = hwnd ?? NativeMethods.GetForegroundWindow();
+            if (hWndToCheck == IntPtr.Zero)
+            {
+                UpdateState(false);
+                return;
+            }
 
-            NativeMethods.GetWindowThreadProcessId(hWnd, out uint processId);
+            NativeMethods.GetWindowThreadProcessId(hWndToCheck, out uint processId);
             
             bool isActiveNow = false;
+            string processName = string.Empty;
 
-            if (processId != _lastProcessId)
+            if (processId > 0)
             {
-                _lastProcessId = processId;
                 try
                 {
                     using var process = Process.GetProcessById((int)processId);
-                    _lastProcessName = process.ProcessName + ".exe";
-                }
-                catch (System.ComponentModel.Win32Exception)
-                {
-                    _lastProcessName = string.Empty; // Access denied
-                }
-                catch (ArgumentException)
-                {
-                    _lastProcessName = string.Empty; // Process is not running
-                }
-                catch (InvalidOperationException)
-                {
-                    _lastProcessName = string.Empty;
+                    processName = process.ProcessName + ".exe";
                 }
                 catch (Exception)
                 {
-                    _lastProcessName = string.Empty;
+                    // Access denied or process not found
                 }
             }
 
-            if (_lastProcessName.Equals(_targetExecutable, StringComparison.OrdinalIgnoreCase))
+            if (processName.Equals(_targetExecutable, StringComparison.OrdinalIgnoreCase))
             {
                 isActiveNow = true;
             }
 
-            if (isActiveNow != _isGameActive)
+            UpdateState(isActiveNow);
+        }
+
+        private void UpdateState(bool isActive)
+        {
+            if (isActive != _isGameActive)
             {
-                _isGameActive = isActiveNow;
+                _isGameActive = isActive;
                 GameActiveStateChanged?.Invoke(this, _isGameActive);
             }
         }
 
         public void Dispose()
         {
-            _timer?.Dispose();
+            StopMonitoring();
         }
     }
 }

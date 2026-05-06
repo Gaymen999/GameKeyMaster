@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using GameKeyMaster.Models;
 
@@ -6,6 +7,8 @@ namespace GameKeyMaster.Core
 {
     public class MacroExecutor
     {
+        private static readonly SemaphoreSlim _inputLock = new SemaphoreSlim(1, 1);
+
         public async Task ExecuteMacroAsync(MacroProfile macro)
         {
             foreach (var action in macro.Actions)
@@ -22,19 +25,27 @@ namespace GameKeyMaster.Core
                     ushort vkCode = KeyHelper.GetVirtualKeyCode(action.Key);
                     if (vkCode == 0) continue;
 
-                    if (action.ActionType == "keyDown")
+                    await _inputLock.WaitAsync();
+                    try
                     {
-                        InputSender.SendVirtualKey(vkCode, true);
+                        if (action.ActionType == "keyDown")
+                        {
+                            InputSender.SendVirtualKey(vkCode, true);
+                        }
+                        else if (action.ActionType == "keyUp")
+                        {
+                            InputSender.SendVirtualKey(vkCode, false);
+                        }
+                        else if (action.ActionType == "keyPress")
+                        {
+                            InputSender.SendVirtualKey(vkCode, true);
+                            await Task.Delay(20); // Small delay between down and up for game engine detection
+                            InputSender.SendVirtualKey(vkCode, false);
+                        }
                     }
-                    else if (action.ActionType == "keyUp")
+                    finally
                     {
-                        InputSender.SendVirtualKey(vkCode, false);
-                    }
-                    else if (action.ActionType == "keyPress")
-                    {
-                        InputSender.SendVirtualKey(vkCode, true);
-                        await Task.Delay(20); // Small delay between down and up for game engine detection
-                        InputSender.SendVirtualKey(vkCode, false);
+                        _inputLock.Release();
                     }
                 }
             }

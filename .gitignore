@@ -38,3 +38,7 @@ packages/
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Project specific
+crash_log.txt
+TODO.md
