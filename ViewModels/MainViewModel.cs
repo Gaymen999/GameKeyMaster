@@ -12,12 +12,12 @@ namespace GameKeyMaster.ViewModels
     {
         private readonly DataService _dataService;
         private AppProfile _profile;
-        private GameProfile _selectedGame;
+        private GameProfile? _selectedGame;
         private string _statusText = "Hazır";
 
         public ObservableCollection<GameProfile> Games { get; set; }
 
-        public GameProfile SelectedGame
+        public GameProfile? SelectedGame
         {
             get => _selectedGame;
             set

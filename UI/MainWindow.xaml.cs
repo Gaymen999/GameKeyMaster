@@ -205,7 +205,10 @@ namespace GameKeyMaster.UI
             }
             finally
             {
-                _runningMacros.Remove(macro);
+                lock (_runningMacros)
+                {
+                    _runningMacros.Remove(macro);
+                }
             }
         }
 
@@ -238,6 +241,10 @@ namespace GameKeyMaster.UI
             _processMonitor.Dispose();
             _hookEngine.Dispose();
             base.OnClosed(e);
+        }
+    }
+}
+    base.OnClosed(e);
         }
     }
 }
