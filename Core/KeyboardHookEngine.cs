@@ -36,10 +36,8 @@ namespace GameKeyMaster.Core
 
         private IntPtr SetHook(NativeMethods.LowLevelKeyboardProc proc)
         {
-            using var curProcess = Process.GetCurrentProcess();
-            using var curModule = curProcess.MainModule;
             return NativeMethods.SetWindowsHookEx(NativeMethods.WH_KEYBOARD_LL, proc,
-                NativeMethods.GetModuleHandle(curModule?.ModuleName ?? string.Empty), 0);
+                NativeMethods.GetModuleHandle(null), 0);
         }
 
         private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)

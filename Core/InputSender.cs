@@ -5,8 +5,12 @@ namespace GameKeyMaster.Core
 {
     public static class InputSender
     {
-        public static void SendKey(ushort scanCode, bool isKeyDown)
+        public static void SendKey(ushort scanCode, bool isKeyDown, bool isExtended = false)
         {
+            uint flags = NativeMethods.KEYEVENTF_SCANCODE;
+            if (!isKeyDown) flags |= NativeMethods.KEYEVENTF_KEYUP;
+            if (isExtended) flags |= NativeMethods.KEYEVENTF_EXTENDEDKEY;
+
             var input = new NativeMethods.INPUT
             {
                 type = NativeMethods.INPUT_KEYBOARD,
@@ -16,7 +20,7 @@ namespace GameKeyMaster.Core
                     {
                         wVk = 0,
                         wScan = scanCode,
-                        dwFlags = NativeMethods.KEYEVENTF_SCANCODE | (isKeyDown ? 0 : NativeMethods.KEYEVENTF_KEYUP),
+                        dwFlags = flags,
                         time = 0,
                         dwExtraInfo = (IntPtr)0x1337 // Sonsuz döngü koruma bayrağı
                     }
@@ -31,7 +35,12 @@ namespace GameKeyMaster.Core
             ushort scanCode = (ushort)NativeMethods.MapVirtualKey(vkCode, 0);
             if (scanCode != 0)
             {
-                SendKey(scanCode, isKeyDown);
+                // Detect extended keys (Arrows, Insert, Delete, Home, End, PageUp, PageDown)
+                bool isExtended = (vkCode >= 0x21 && vkCode <= 0x2E) || // PageUp to Help
+                                 (vkCode >= 0x5B && vkCode <= 0x5C) || // Windows keys
+                                 (vkCode == 0x2D) || (vkCode == 0x2E);  // Insert, Delete
+                
+                SendKey(scanCode, isKeyDown, isExtended);
             }
         }
     }

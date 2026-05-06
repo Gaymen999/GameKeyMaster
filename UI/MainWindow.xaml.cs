@@ -6,6 +6,7 @@ using GameKeyMaster.ViewModels;
 using GameKeyMaster.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace GameKeyMaster.UI
 {
@@ -68,12 +69,16 @@ namespace GameKeyMaster.UI
                     string outputKey = outputCapture.ResultKey;
 
                     // 3. Eşlemeyi ekle
-                    _viewModel.SelectedGame.Mappings.Add(new KeyMapping { 
-                        InputKey = inputKey, 
-                        OutputKey = outputKey, 
-                        SuppressOriginal = true 
-                    });
-                    _viewModel.Save();
+                    var game = _viewModel.SelectedGame;
+                    if (game != null)
+                    {
+                        game.Mappings.Add(new KeyMapping { 
+                            InputKey = inputKey, 
+                            OutputKey = outputKey, 
+                            SuppressOriginal = true 
+                        });
+                        _viewModel.Save();
+                    }
                 }
             }
         }
@@ -89,8 +94,12 @@ namespace GameKeyMaster.UI
             var builder = new MacroBuilderWindow { Owner = this };
             if (builder.ShowDialog() == true)
             {
-                _viewModel.SelectedGame.Macros.Add(builder.ResultMacro);
-                _viewModel.Save();
+                var game = _viewModel.SelectedGame;
+                if (game != null)
+                {
+                    game.Macros.Add(builder.ResultMacro);
+                    _viewModel.Save();
+                }
             }
         }
 
@@ -159,10 +168,12 @@ namespace GameKeyMaster.UI
 
         private async void HookEngine_KeyIntercepted(object? sender, HookEventArgs e)
         {
-            if (_viewModel.SelectedGame == null) return;
+            var game = _viewModel.SelectedGame;
+            if (game == null) return;
 
-            // 1. Normal Eşleşmeler
-            foreach (var mapping in _viewModel.SelectedGame.Mappings)
+            // 1. Normal Eşleşmeler - Snapshot kullanarak thread-safety sağla
+            var mappings = game.Mappings.ToArray();
+            foreach (var mapping in mappings)
             {
                 ushort inputVk = KeyHelper.GetVirtualKeyCode(mapping.InputKey);
                 if (inputVk != 0 && e.KeyCode == inputVk)
@@ -177,8 +188,9 @@ namespace GameKeyMaster.UI
                 }
             }
 
-            // 2. Makrolar
-            foreach (var macro in _viewModel.SelectedGame.Macros)
+            // 2. Makrolar - Snapshot kullanarak thread-safety sağla
+            var macros = game.Macros.ToArray();
+            foreach (var macro in macros)
             {
                 ushort inputVk = KeyHelper.GetVirtualKeyCode(macro.InputKey);
                 if (inputVk != 0 && e.KeyCode == inputVk)
@@ -186,10 +198,13 @@ namespace GameKeyMaster.UI
                     e.Suppress = macro.SuppressOriginal;
                     if (e.IsKeyDown)
                     {
-                        if (!_runningMacros.Contains(macro))
+                        lock (_runningMacros)
                         {
-                            _runningMacros.Add(macro);
-                            _ = ExecuteMacroWithTrackingAsync(macro);
+                            if (!_runningMacros.Contains(macro))
+                            {
+                                _runningMacros.Add(macro);
+                                _ = ExecuteMacroWithTrackingAsync(macro);
+                            }
                         }
                     }
                     return;
@@ -241,10 +256,6 @@ namespace GameKeyMaster.UI
             _processMonitor.Dispose();
             _hookEngine.Dispose();
             base.OnClosed(e);
-        }
-    }
-}
-    base.OnClosed(e);
         }
     }
 }

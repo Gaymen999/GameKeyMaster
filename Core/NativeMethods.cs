@@ -39,7 +39,7 @@ namespace GameKeyMaster.Core
         public static extern IntPtr CallNextHookEx(IntPtr hhk, int nCode, IntPtr wParam, IntPtr lParam);
 
         [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern IntPtr GetModuleHandle(string lpModuleName);
+        public static extern IntPtr GetModuleHandle(string? lpModuleName);
 
         // Foreground Window
         [DllImport("user32.dll")]
