@@ -21,12 +21,16 @@ jobs:
       with:
         dotnet-version: 8.0.x
 
-    - name: Publish Standalone EXE
-      run: dotnet publish GameKeyMaster.csproj -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true -o ./publish
+    - name: Publish Standalone
+      run: dotnet publish GameKeyMaster.csproj -c Release -r win-x64 --self-contained true -o ./publish
+
+    - name: Create ZIP Archive
+      shell: pwsh
+      run: Compress-Archive -Path ./publish/* -DestinationPath ./GameKeyMaster_win-x64.zip
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: publish/GameKeyMaster.exe
+        files: GameKeyMaster_win-x64.zip
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -7,6 +7,7 @@ using GameKeyMaster.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using GameKeyMaster;
 
 namespace GameKeyMaster.UI
 {
@@ -36,7 +37,10 @@ namespace GameKeyMaster.UI
             }
             catch (Exception ex)
             {
+                // En ham haliyle startup_crash.txt'ye yaz
                 System.IO.File.WriteAllText("startup_crash.txt", ex.ToString());
+                // Ayrıca merkezi loga da ekle
+                App.LogToFile(ex);
                 throw;
             }
         }

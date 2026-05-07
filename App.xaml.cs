@@ -45,7 +45,7 @@ namespace GameKeyMaster
             LogToFile(ex);
         }
 
-        internal void LogToFile(Exception ex)
+        public static void LogToFile(Exception ex)
         {
             try
             {
