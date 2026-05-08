@@ -33,15 +33,20 @@ namespace GameKeyMaster.Core
         public static void SendVirtualKey(ushort vkCode, bool isKeyDown)
         {
             ushort scanCode = (ushort)NativeMethods.MapVirtualKey(vkCode, 0);
-            if (scanCode != 0)
+            
+            // Detect extended keys (Arrows, Insert, Delete, Home, End, PageUp, PageDown, R-Alt, R-Ctrl)
+            bool isExtended = false;
+            if (vkCode == 0x21 || vkCode == 0x22 || // Page Up, Page Down
+                vkCode == 0x23 || vkCode == 0x24 || // End, Home
+                vkCode == 0x25 || vkCode == 0x26 || vkCode == 0x27 || vkCode == 0x28 || // Arrows
+                vkCode == 0x2D || vkCode == 0x2E || // Insert, Delete
+                vkCode == 0xA5 || vkCode == 0xA3 || // R-Alt, R-Ctrl
+                vkCode == 0x6F || vkCode == 0x0D)    // Num / , Num Enter (some cases)
             {
-                // Detect extended keys (Arrows, Insert, Delete, Home, End, PageUp, PageDown)
-                bool isExtended = (vkCode >= 0x21 && vkCode <= 0x2E) || // PageUp to Help
-                                 (vkCode >= 0x5B && vkCode <= 0x5C) || // Windows keys
-                                 (vkCode == 0x2D) || (vkCode == 0x2E);  // Insert, Delete
-                
-                SendKey(scanCode, isKeyDown, isExtended);
+                isExtended = true;
             }
+
+            SendKey(scanCode, isKeyDown, isExtended);
         }
     }
 }

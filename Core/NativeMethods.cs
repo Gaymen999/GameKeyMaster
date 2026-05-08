@@ -117,6 +117,7 @@ namespace GameKeyMaster.Core
         // Window styles for overlay
         public const int GWL_EXSTYLE = -20;
         public const int WS_EX_TRANSPARENT = 0x00000020;
+        public const int WS_EX_LAYERED = 0x00080000;
         
         [DllImport("user32.dll", EntryPoint = "GetWindowLong", CharSet = CharSet.Auto, SetLastError = true)]
         private static extern IntPtr GetWindowLongPtr32(IntPtr hWnd, int nIndex);

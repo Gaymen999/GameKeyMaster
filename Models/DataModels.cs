@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 
 namespace GameKeyMaster.Models
 {
     public class AppProfile
     {
-        public List<GameProfile> Games { get; set; } = new();
+        public ObservableCollection<GameProfile> Games { get; set; } = new();
     }
 
     public class GameProfile
@@ -15,8 +16,8 @@ namespace GameKeyMaster.Models
         public string ExecutableName { get; set; } = string.Empty;
         public bool IsActive { get; set; } = true;
         
-        public List<KeyMapping> Mappings { get; set; } = new();
-        public List<MacroProfile> Macros { get; set; } = new();
+        public ObservableCollection<KeyMapping> Mappings { get; set; } = new();
+        public ObservableCollection<MacroProfile> Macros { get; set; } = new();
     }
 
     public class KeyMapping

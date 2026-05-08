@@ -71,7 +71,9 @@ namespace GameKeyMaster.Core
 
             if (args.Suppress)
             {
-                return (IntPtr)1; // Suppress the key (Yutma işlemi)
+                // ÖNEMLİ: Tuş yutma (suppression) aktifse, işletim sistemine tuşun işlendiğini 
+                // ve diğer uygulamalara gönderilmemesi gerektiğini bildir (IntPtr)1.
+                return (IntPtr)1; 
             }
 
             return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);

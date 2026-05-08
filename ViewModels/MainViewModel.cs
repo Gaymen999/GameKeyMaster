@@ -15,7 +15,7 @@ namespace GameKeyMaster.ViewModels
         private GameProfile? _selectedGame;
         private string _statusText = "Hazır";
 
-        public ObservableCollection<GameProfile> Games { get; set; }
+        public ObservableCollection<GameProfile> Games => _profile.Games;
 
         public GameProfile? SelectedGame
         {
@@ -41,14 +41,12 @@ namespace GameKeyMaster.ViewModels
         {
             _dataService = new DataService();
             _profile = _dataService.LoadProfile();
-            Games = new ObservableCollection<GameProfile>(_profile.Games);
         }
 
         public void AddGame(string name, string executable)
         {
             var newGame = new GameProfile { Name = name, ExecutableName = executable };
             _profile.Games.Add(newGame);
-            Games.Add(newGame);
             Save();
         }
 
