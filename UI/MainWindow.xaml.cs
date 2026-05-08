@@ -191,6 +191,22 @@ namespace GameKeyMaster.UI
                 var game = _viewModel.SelectedGame;
                 if (game == null) return;
 
+                // Teşhis: Tuş yakalandı
+                if (e.IsKeyDown)
+                {
+                    string keyName = System.Windows.Input.KeyInterop.KeyFromVirtualKey(e.KeyCode).ToString();
+                    App.LogAction($"Tuş Yakalandı: {keyName} ({e.KeyCode:X})");
+                }
+
+                // Teşhis: Oyun Aktiflik Kontrolü
+                if (!_hookEngine.IsActive)
+                {
+                    if (e.IsKeyDown) App.LogAction($"Tuş yoksayıldı: Oyun aktif değil ({game.ExecutableName})");
+                    return;
+                }
+
+                bool matched = false;
+
                 // 1. Normal Eşleşmeler - Snapshot kullanarak thread-safety sağla
                 var mappings = game.Mappings.ToArray();
                 foreach (var mapping in mappings)
@@ -198,10 +214,12 @@ namespace GameKeyMaster.UI
                     ushort inputVk = KeyHelper.GetVirtualKeyCode(mapping.InputKey);
                     if (inputVk != 0 && e.KeyCode == inputVk)
                     {
+                        matched = true;
                         e.Suppress = mapping.SuppressOriginal;
                         ushort outputVk = KeyHelper.GetVirtualKeyCode(mapping.OutputKey);
                         if (outputVk != 0)
                         {
+                            if (e.IsKeyDown) App.LogAction($"Tetiklendi: [Eşleme] {mapping.InputKey} -> {mapping.OutputKey} (Yutma: {e.Suppress})");
                             InputSender.SendVirtualKey(outputVk, e.IsKeyDown); // Hold Desteği
                         }
                         return;
@@ -215,9 +233,11 @@ namespace GameKeyMaster.UI
                     ushort inputVk = KeyHelper.GetVirtualKeyCode(macro.InputKey);
                     if (inputVk != 0 && e.KeyCode == inputVk)
                     {
+                        matched = true;
                         e.Suppress = macro.SuppressOriginal;
                         if (e.IsKeyDown)
                         {
+                            App.LogAction($"Tetiklendi: [Makro] {macro.InputKey} ({macro.Actions.Count} adım)");
                             lock (_runningMacros)
                             {
                                 if (!_runningMacros.Contains(macro))
@@ -230,6 +250,13 @@ namespace GameKeyMaster.UI
                         return;
                     }
                 }
+
+                // Teşhis: Eşleşme bulunamadı
+                if (!matched && e.IsKeyDown)
+                {
+                    string keyName = System.Windows.Input.KeyInterop.KeyFromVirtualKey(e.KeyCode).ToString();
+                    App.LogAction($"Eşleşme bulunamadı: {keyName}");
+                }
             }
             catch (Exception ex)
             {
@@ -237,6 +264,34 @@ namespace GameKeyMaster.UI
                 {
                     app.LogAndCleanup(ex);
                 }
+            }
+        }
+
+        public void UpdateLatestLog(string message)
+        {
+            if (StatusLogText != null)
+            {
+                StatusLogText.Text = message;
+            }
+        }
+
+        private void OpenLogs_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "activity_log.txt");
+                if (System.IO.File.Exists(logPath))
+                {
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(logPath) { UseShellExecute = true });
+                }
+                else
+                {
+                    MessageBox.Show("Henüz bir etkinlik kaydı oluşturulmadı.", "Bilgi", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Log dosyası açılamadı: {ex.Message}");
             }
         }
 

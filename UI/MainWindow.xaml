@@ -226,8 +226,30 @@
             </TabControl>
 
             <Border Grid.Row="2" Background="#331A1A" BorderBrush="#C0392B" BorderThickness="1" CornerRadius="8" Padding="15">
-                <TextBlock Text="⚠ GÜVENLİK UYARISI: Bu yazılım doğrudan girdi simülasyonu kullanır. Bazı rekabetçi oyunlarda kullanım riskli olabilir. Her zaman en güncel sürümü ve makul gecikme (delay) sürelerini kullanın." 
-                           Foreground="#E74C3C" FontSize="11" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                        <TextBlock Text="⚠ GÜVENLİK UYARISI: Bu yazılım doğrudan girdi simülasyonu kullanır. Bazı rekabetçi oyunlarda kullanım riskli olabilir." 
+                                   Foreground="#E74C3C" FontSize="11" TextWrapping="Wrap" FontWeight="SemiBold"/>
+                        <Border Background="#121212" CornerRadius="4" Padding="8,4" Margin="0,10,0,0" BorderBrush="#333" BorderThickness="1">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="SON ETKİNLİK:" Foreground="#888" FontSize="10" FontWeight="Bold" Margin="0,0,10,0" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="StatusLogText" Text="Sistem hazır." Foreground="#2ECC71" FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="LOGLARI GÖR" Click="OpenLogs_Click" Background="#2D2D2D" Foreground="#888" 
+                            FontSize="10" Padding="10,5" Margin="15,0,0,0" VerticalAlignment="Center" BorderThickness="1" BorderBrush="#444">
+                        <Button.Resources>
+                            <Style TargetType="Border">
+                                <Setter Property="CornerRadius" Value="4"/>
+                            </Style>
+                        </Button.Resources>
+                    </Button>
+                </Grid>
             </Border>
         </Grid>
     </Grid>

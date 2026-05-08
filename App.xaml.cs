@@ -47,13 +47,37 @@ namespace GameKeyMaster
 
         public static void LogToFile(Exception ex)
         {
+            LogToFile($"Hata: {ex.Message}\nStack Trace:\n{ex.StackTrace}\n" +
+                      (ex.InnerException != null ? $"Inner Hata: {ex.InnerException.Message}\nInner Stack Trace:\n{ex.InnerException.StackTrace}\n" : ""));
+        }
+
+        public static void LogToFile(string message)
+        {
             try
             {
                 string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "crash_log.txt");
-                string logContent = $"[{DateTime.Now}] Hata: {ex.Message}\nStack Trace:\n{ex.StackTrace}\n" +
-                                   (ex.InnerException != null ? $"Inner Hata: {ex.InnerException.Message}\nInner Stack Trace:\n{ex.InnerException.StackTrace}\n" : "") +
-                                   "--------------------------------------------------\n";
+                string logContent = $"[{DateTime.Now}] {message}\n--------------------------------------------------\n";
                 System.IO.File.AppendAllText(logPath, logContent);
+            }
+            catch { }
+        }
+
+        public static void LogAction(string message)
+        {
+            try
+            {
+                string logPath = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "activity_log.txt");
+                string logContent = $"[{DateTime.Now:HH:mm:ss}] {message}\n";
+                System.IO.File.AppendAllText(logPath, logContent);
+
+                // UI'daki son logu güncellemek için bir event tetiklenebilir veya MainWindow'a doğrudan erişilebilir
+                Application.Current?.Dispatcher.Invoke(() =>
+                {
+                    if (Application.Current.MainWindow is GameKeyMaster.UI.MainWindow mw)
+                    {
+                        mw.UpdateLatestLog(message);
+                    }
+                });
             }
             catch { }
         }

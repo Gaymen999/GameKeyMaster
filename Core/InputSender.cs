@@ -27,7 +27,11 @@ namespace GameKeyMaster.Core
                 }
             };
 
-            NativeMethods.SendInput(1, new[] { input }, Marshal.SizeOf(typeof(NativeMethods.INPUT)));
+            uint result = NativeMethods.SendInput(1, new[] { input }, Marshal.SizeOf(typeof(NativeMethods.INPUT)));
+            if (result == 0)
+            {
+                App.LogAction($"HATA: Tuş gönderilemedi (SendInput başarısız: {Marshal.GetLastWin32Error()})");
+            }
         }
 
         public static void SendVirtualKey(ushort vkCode, bool isKeyDown)
