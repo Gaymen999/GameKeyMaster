@@ -204,7 +204,7 @@
                                             <Grid>
                                                 <StackPanel VerticalAlignment="Center">
                                                     <TextBlock Text="{Binding InputKey}" FontWeight="Black" FontSize="18" Foreground="#E67E22" HorizontalAlignment="Center"/>
-                                                    <TextBlock Text="{Binding Actions.Count, StringFormat='{0} Adım'}" FontSize="12" Foreground="#666" HorizontalAlignment="Center" Margin="0,5,0,0"/>
+                                                    <TextBlock Text="{Binding Actions.Count, StringFormat='{}{0} Adım'}" FontSize="12" Foreground="#666" HorizontalAlignment="Center" Margin="0,5,0,0"/>
                                                 </StackPanel>
                                                 <Button Content="✕" HorizontalAlignment="Right" VerticalAlignment="Top" Background="Transparent" BorderThickness="0" Foreground="#555" Click="DeleteMacro_Click" Cursor="Hand"/>
                                             </Grid>
