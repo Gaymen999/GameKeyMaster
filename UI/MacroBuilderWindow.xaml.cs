@@ -6,7 +6,7 @@ namespace GameKeyMaster.UI
 {
     public partial class MacroBuilderWindow : Window
     {
-        public MacroProfile ResultMacro { get; private set; }
+        public MacroProfile? ResultMacro { get; private set; }
         private ObservableCollection<MacroActionDisplay> _actions;
 
         public MacroBuilderWindow()

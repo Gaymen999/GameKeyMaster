@@ -110,7 +110,7 @@ namespace GameKeyMaster.UI
             }
 
             var builder = new MacroBuilderWindow { Owner = this };
-            if (builder.ShowDialog() == true)
+            if (builder.ShowDialog() == true && builder.ResultMacro != null)
             {
                 var game = _viewModel.SelectedGame;
                 if (game != null)
@@ -168,7 +168,8 @@ namespace GameKeyMaster.UI
                     _viewModel.StatusText = "OYUN AKTİF: Tuşlar eşleniyor.";
                     if (_currentOverlay == null)
                     {
-                        _currentOverlay = new OverlayWindow(_viewModel.SelectedGame.Name);
+                        string gameName = _viewModel.SelectedGame?.Name ?? "Oyun";
+                        _currentOverlay = new OverlayWindow(gameName);
                         _currentOverlay.Closed += (s, e) => _currentOverlay = null;
                         _currentOverlay.Show();
                     }
