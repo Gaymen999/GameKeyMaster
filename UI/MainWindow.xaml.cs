@@ -18,7 +18,12 @@ namespace GameKeyMaster.UI
         private ProcessMonitor _processMonitor;
         private MacroExecutor _macroExecutor;
         private OverlayWindow? _currentOverlay;
-        private HashSet<MacroProfile> _runningMacros = new HashSet<MacroProfile>();
+        private readonly Dictionary<MacroProfile, CancellationTokenSource> _runningMacros = new();
+
+        // Fast lookups for the hook thread
+        private readonly Dictionary<int, KeyMapping> _mappingLookup = new();
+        private readonly Dictionary<int, MacroProfile> _macroLookup = new();
+        private readonly object _lookupLock = new object();
 
         public MainWindow()
         {
@@ -145,6 +150,24 @@ namespace GameKeyMaster.UI
                 return;
             }
 
+            lock (_lookupLock)
+            {
+                _mappingLookup.Clear();
+                _macroLookup.Clear();
+
+                foreach (var m in _viewModel.SelectedGame.Mappings)
+                {
+                    ushort vk = KeyHelper.GetVirtualKeyCode(m.InputKey);
+                    if (vk != 0) _mappingLookup[vk] = m;
+                }
+
+                foreach (var m in _viewModel.SelectedGame.Macros)
+                {
+                    ushort vk = KeyHelper.GetVirtualKeyCode(m.InputKey);
+                    if (vk != 0) _macroLookup[vk] = m;
+                }
+            }
+
             _processMonitor.SetTargetGame(_viewModel.SelectedGame.ExecutableName);
             _hookEngine.Start();
             _processMonitor.StartMonitoring();
@@ -155,6 +178,13 @@ namespace GameKeyMaster.UI
         {
             _processMonitor.StopMonitoring();
             _hookEngine.Stop();
+
+            lock (_lookupLock)
+            {
+                _mappingLookup.Clear();
+                _macroLookup.Clear();
+            }
+
             _viewModel.StatusText = "Sistem durduruldu.";
         }
 
@@ -166,6 +196,9 @@ namespace GameKeyMaster.UI
                 if (isActive)
                 {
                     _viewModel.StatusText = "OYUN AKTİF: Tuşlar eşleniyor.";
+                    GameStatusText.Text = "BAĞLANDI";
+                    GameStatusText.Foreground = new SolidColorBrush(Color.FromRgb(39, 174, 96));
+                    
                     if (_currentOverlay == null)
                     {
                         string gameName = _viewModel.SelectedGame?.Name ?? "Oyun";
@@ -173,98 +206,84 @@ namespace GameKeyMaster.UI
                         _currentOverlay.Closed += (s, e) => _currentOverlay = null;
                         _currentOverlay.Show();
                     }
+                    else
+                    {
+                        _currentOverlay.UpdateStatus("SİSTEM AKTİF", true);
+                    }
                 }
                 else
                 {
                     _viewModel.StatusText = "Oyun arka planda. Sistem beklemede.";
+                    GameStatusText.Text = "BEKLEMEDE";
+                    GameStatusText.Foreground = new SolidColorBrush(Color.FromRgb(241, 196, 15));
+                    
                     if (_currentOverlay != null)
                     {
                         _currentOverlay.Close();
+                        _currentOverlay = null;
                     }
                 }
             });
         }
 
-        private async void HookEngine_KeyIntercepted(object? sender, HookEventArgs e)
+        private void HookEngine_KeyIntercepted(object? sender, HookEventArgs e)
         {
             try
             {
-                var game = _viewModel.SelectedGame;
-                if (game == null) return;
-
-                // Teşhis: Tuş yakalandı
-                if (e.IsKeyDown)
+                // 1. Global Toggle Check (Scroll Lock = 0x91)
+                if (e.KeyCode == 0x91 && e.IsKeyDown)
                 {
-                    string keyName = System.Windows.Input.KeyInterop.KeyFromVirtualKey(e.KeyCode).ToString();
-                    App.LogAction($"Tuş Yakalandı: {keyName} ({e.KeyCode:X})");
-                }
-
-                // Teşhis: Oyun Aktiflik Kontrolü
-                if (!_hookEngine.IsActive)
-                {
-                    if (e.IsKeyDown) App.LogAction($"Tuş yoksayıldı: Oyun aktif değil ({game.ExecutableName})");
+                    _hookEngine.IsActive = !_hookEngine.IsActive;
+                    string statusMsg = _hookEngine.IsActive ? "SİSTEM AKTİF" : "SİSTEM PASİF";
+                    _currentOverlay?.UpdateStatus(statusMsg, _hookEngine.IsActive);
+                    
+                    Dispatcher.Invoke(() => {
+                        _viewModel.StatusText = _hookEngine.IsActive ? "SİSTEM AKTİF (Manuel)" : "SİSTEM DURDURULDU (Manuel)";
+                    });
                     return;
                 }
 
-                bool matched = false;
+                if (!_hookEngine.IsActive) return;
 
-                // 1. Normal Eşleşmeler - Snapshot kullanarak thread-safety sağla
-                var mappings = game.Mappings.ToArray();
-                foreach (var mapping in mappings)
+                KeyMapping? mapping = null;
+                MacroProfile? macro = null;
+
+                lock (_lookupLock)
                 {
-                    ushort inputVk = KeyHelper.GetVirtualKeyCode(mapping.InputKey);
-                    if (inputVk != 0 && e.KeyCode == inputVk)
-                    {
-                        matched = true;
-                        e.Suppress = mapping.SuppressOriginal;
-                        ushort outputVk = KeyHelper.GetVirtualKeyCode(mapping.OutputKey);
-                        if (outputVk != 0)
-                        {
-                            if (e.IsKeyDown) App.LogAction($"Tetiklendi: [Eşleme] {mapping.InputKey} -> {mapping.OutputKey} (Yutma: {e.Suppress})");
-                            InputSender.SendVirtualKey(outputVk, e.IsKeyDown); // Hold Desteği
-                        }
-                        return;
-                    }
+                    if (_mappingLookup.TryGetValue(e.KeyCode, out var m)) mapping = m;
+                    else if (_macroLookup.TryGetValue(e.KeyCode, out var mac)) macro = mac;
                 }
 
-                // 2. Makrolar - Snapshot kullanarak thread-safety sağla
-                var macros = game.Macros.ToArray();
-                foreach (var macro in macros)
+                if (mapping != null)
                 {
-                    ushort inputVk = KeyHelper.GetVirtualKeyCode(macro.InputKey);
-                    if (inputVk != 0 && e.KeyCode == inputVk)
+                    e.Suppress = mapping.SuppressOriginal;
+                    ushort outputVk = KeyHelper.GetVirtualKeyCode(mapping.OutputKey);
+                    if (outputVk != 0)
                     {
-                        matched = true;
-                        e.Suppress = macro.SuppressOriginal;
-                        if (e.IsKeyDown)
+                        // Send input on a background thread to keep the hook thread responsive
+                        Task.Run(() => InputSender.SendVirtualKey(outputVk, e.IsKeyDown));
+                    }
+                }
+                else if (macro != null)
+                {
+                    e.Suppress = macro.SuppressOriginal;
+                    if (e.IsKeyDown)
+                    {
+                        lock (_runningMacros)
                         {
-                            App.LogAction($"Tetiklendi: [Makro] {macro.InputKey} ({macro.Actions.Count} adım)");
-                            lock (_runningMacros)
+                            if (!_runningMacros.ContainsKey(macro))
                             {
-                                if (!_runningMacros.Contains(macro))
-                                {
-                                    _runningMacros.Add(macro);
-                                    _ = ExecuteMacroWithTrackingAsync(macro);
-                                }
+                                var cts = new CancellationTokenSource();
+                                _runningMacros[macro] = cts;
+                                _ = ExecuteMacroWithTrackingAsync(macro, cts.Token);
                             }
                         }
-                        return;
                     }
-                }
-
-                // Teşhis: Eşleşme bulunamadı
-                if (!matched && e.IsKeyDown)
-                {
-                    string keyName = System.Windows.Input.KeyInterop.KeyFromVirtualKey(e.KeyCode).ToString();
-                    App.LogAction($"Eşleşme bulunamadı: {keyName}");
                 }
             }
             catch (Exception ex)
             {
-                if (Application.Current is App app)
-                {
-                    app.LogAndCleanup(ex);
-                }
+                App.LogToFile(ex);
             }
         }
 
@@ -296,17 +315,25 @@ namespace GameKeyMaster.UI
             }
         }
 
-        private async Task ExecuteMacroWithTrackingAsync(MacroProfile macro)
+        private async Task ExecuteMacroWithTrackingAsync(MacroProfile macro, CancellationToken ct)
         {
             try
             {
-                await _macroExecutor.ExecuteMacroAsync(macro);
+                await _macroExecutor.ExecuteMacroAsync(macro, ct);
+            }
+            catch (Exception ex)
+            {
+                App.LogToFile(ex);
             }
             finally
             {
                 lock (_runningMacros)
                 {
-                    _runningMacros.Remove(macro);
+                    if (_runningMacros.TryGetValue(macro, out var cts))
+                    {
+                        cts.Dispose();
+                        _runningMacros.Remove(macro);
+                    }
                 }
             }
         }

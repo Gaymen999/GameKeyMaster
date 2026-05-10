@@ -8,7 +8,7 @@
     <Grid>
         <Border Background="#CC1E1E1E" CornerRadius="20" Padding="12,5" HorizontalAlignment="Right" VerticalAlignment="Top" BorderBrush="#007ACC" BorderThickness="1">
             <StackPanel Orientation="Horizontal">
-                <Ellipse Width="10" Height="10" Fill="#27AE60" Margin="0,0,8,0">
+                <Ellipse x:Name="StatusIndicator" Width="10" Height="10" Fill="#27AE60" Margin="0,0,8,0">
                     <Ellipse.Triggers>
                         <EventTrigger RoutedEvent="Loaded">
                             <BeginStoryboard>

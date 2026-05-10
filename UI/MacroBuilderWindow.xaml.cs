@@ -72,6 +72,14 @@ namespace GameKeyMaster.UI
             }
         }
 
+        private void ClearAll_Click(object sender, RoutedEventArgs e)
+        {
+            if (_actions.Count > 0 && MessageBox.Show("Tüm adımları silmek istediğinize emin misiniz?", "Temizle", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                _actions.Clear();
+            }
+        }
+
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             if (TriggerKeyTextBox.Text == "Belirlenmedi" || _actions.Count == 0)

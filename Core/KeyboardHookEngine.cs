@@ -59,7 +59,7 @@ namespace GameKeyMaster.Core
             var kbdStruct = Marshal.PtrToStructure<NativeMethods.KBDLLHOOKSTRUCT>(lParam);
             
             // Sonsuz döngü koruması: Bizim gönderdiğimiz tuşları yoksay
-            if (kbdStruct.dwExtraInfo == (IntPtr)0x1337)
+            if (kbdStruct.dwExtraInfo == NativeMethods.GKM_EXTRA_INFO)
             {
                 return NativeMethods.CallNextHookEx(_hookID, nCode, wParam, lParam);
             }

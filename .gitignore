@@ -2,20 +2,6 @@
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
-
-# User-specific files
-*.rsuser
-*.suo
-*.user
-*.userosscache
-*.sln.docstates
-
-# Visual Studio
-.vs/
-*.sqlite
-.vscode/
-
-# Build results
 [Dd]ebug/
 [Rr]elease/
 x64/
@@ -23,22 +9,43 @@ x86/
 build/
 bld/
 [Bb]inaries/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Visual Studio
+.vs/
+.vscode/
+*.sqlite
 *.VC.db
+*.opendb
+*.VC.VC.opendb
 
 # NuGet Packages
 *.nupkg
 packages/
+project.lock.json
+project.assets.json
 
-# Profiling
-*.psess
-*.vsp
-*.vspx
-*.sap
+# Log files
+*.log
+startup_crash.txt
+activity_log.txt
+crash_log.txt
 
 # OS specific
 .DS_Store
 Thumbs.db
 
 # Project specific
+planla.md
+todo.md
+*.md.bak
+startup_crash.txt
+activity_log.txt
 crash_log.txt
-TODO.md

@@ -70,14 +70,14 @@ namespace GameKeyMaster.Core
             NativeMethods.GetWindowThreadProcessId(hWndToCheck, out uint processId);
             
             bool isActiveNow = false;
-            string processName = string.Empty;
+            string currentProcessName = string.Empty;
 
             if (processId > 0)
             {
                 try
                 {
                     using var process = Process.GetProcessById((int)processId);
-                    processName = process.ProcessName + ".exe";
+                    currentProcessName = process.ProcessName; // Usually without .exe
                 }
                 catch (Exception)
                 {
@@ -85,7 +85,14 @@ namespace GameKeyMaster.Core
                 }
             }
 
-            if (processName.Equals(_targetExecutable, StringComparison.OrdinalIgnoreCase))
+            // Standardize target: remove .exe if present
+            string normalizedTarget = _targetExecutable;
+            if (normalizedTarget.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            {
+                normalizedTarget = normalizedTarget.Substring(0, normalizedTarget.Length - 4);
+            }
+
+            if (currentProcessName.Equals(normalizedTarget, StringComparison.OrdinalIgnoreCase))
             {
                 isActiveNow = true;
             }

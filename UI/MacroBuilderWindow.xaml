@@ -22,7 +22,13 @@
             </StackPanel>
         </StackPanel>
 
-        <GroupBox Grid.Row="2" Header="Makro Adımları" Foreground="White" BorderBrush="#333">
+        <GroupBox Grid.Row="2" Foreground="White" BorderBrush="#333">
+            <GroupBox.Header>
+                <Grid Width="350">
+                    <TextBlock Text="Makro Adımları" Foreground="White" VerticalAlignment="Center"/>
+                    <Button Content="Tümünü Temizle" HorizontalAlignment="Right" Background="Transparent" Foreground="#E74C3C" BorderThickness="0" FontSize="10" Click="ClearAll_Click" Cursor="Hand"/>
+                </Grid>
+            </GroupBox.Header>
             <Grid Margin="5">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="*"/>

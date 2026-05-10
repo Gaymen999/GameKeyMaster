@@ -22,7 +22,7 @@ namespace GameKeyMaster.Core
                         wScan = scanCode,
                         dwFlags = flags,
                         time = 0,
-                        dwExtraInfo = (IntPtr)0x1337 // Sonsuz döngü koruma bayrağı
+                        dwExtraInfo = NativeMethods.GKM_EXTRA_INFO // Sonsuz döngü koruma bayrağı
                     }
                 }
             };

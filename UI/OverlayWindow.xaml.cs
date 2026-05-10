@@ -3,6 +3,8 @@ using System.Windows;
 using System.Windows.Interop;
 using GameKeyMaster.Core;
 
+using System.Windows.Media;
+
 namespace GameKeyMaster.UI
 {
     public partial class OverlayWindow : Window
@@ -10,9 +12,15 @@ namespace GameKeyMaster.UI
         public OverlayWindow(string profileName)
         {
             InitializeComponent();
-            // Rozet her zaman "SİSTEM AKTİF" yazacak, profil adını belki tooltip veya başka yere ekleyebiliriz ama 
-            // şimdilik sadece durum göstergesi yeterli.
-            MessageText.Text = "SİSTEM AKTİF";
+            MessageText.Text = $"GKM: {profileName}";
+        }
+
+        public void UpdateStatus(string message, bool isActive)
+        {
+            Dispatcher.Invoke(() => {
+                MessageText.Text = message;
+                StatusIndicator.Fill = isActive ? new SolidColorBrush(Color.FromRgb(39, 174, 96)) : new SolidColorBrush(Color.FromRgb(192, 57, 43));
+            });
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
